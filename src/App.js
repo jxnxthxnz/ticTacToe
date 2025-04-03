@@ -4,9 +4,7 @@ function Square({value, onSquareClick}) { {/* Square is a component, must start 
   return <button className="square" onClick={onSquareClick}>{value}</button>; {/*class name square is a prop */}
 }
 
-export default function Board() { //export = use outside, default = main function
-  const [squares, setSquares] = useState(Array(9).fill(null));
-  const [xIsNext, setXIsNext] = useState(true);
+function Board({xIsNext, squares, onPlay}) { //export = use outside, default = main function
 
   function handleClick(i) {
     if (calculateWinner(squares) || squares[i]) {
@@ -19,8 +17,7 @@ export default function Board() { //export = use outside, default = main functio
     else {
       nextSquares[i] = "O";
     }
-    setSquares(nextSquares);
-    setXIsNext(!xIsNext)
+    onPlay(nextSquares)
   }
 
   const winner = calculateWinner(squares);
@@ -55,6 +52,49 @@ export default function Board() { //export = use outside, default = main functio
   );
 }
 
+export default function Game() {
+  const [history, setHistory] = useState([Array(9).fill(null)]);
+  const [currentMove, setCurrentMove] = useState(0);
+  const xIsNext = currentMove % 2 === 0; {/* figure out xIsNext from currentMove, dont use another state */}
+  const currentSquares = history[currentMove];
+
+  function handlePlay(nextSquares) {
+    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+    setHistory(nextHistory); {/* adds nextSquares to a new array that has history 8*/ }
+    setCurrentMove(nextHistory.length - 1);
+  }
+
+  function jumpTo(nextMove) {
+    setCurrentMove(nextMove);
+  }
+
+  {/* squares is board state array and move is move index */}
+  const moves = history.map((squares, move) => { {/* use .map to transform history of moves into buttons */}
+    let description;
+    if (move > 0) {
+      description = 'Go to move #' + move;
+    }
+    else {
+      description = 'Go to game start';
+    }
+    return (
+      <li key={move}> {/* use move number as key */}
+        <button onClick={() => jumpTo(move)}>{description}</button>
+      </li>
+    )
+  })
+  return (
+    <div className="game">
+      <div className="game-board">
+        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay}/>
+      </div>
+      <div className="game-info">
+        <ol>{moves}</ol>
+      </div>
+    </div>
+  )
+}
+
 function calculateWinner(squares) {
   const lines = [
     [0, 1, 2], 
@@ -80,3 +120,5 @@ function calculateWinner(squares) {
 {/* use shared state in parent component, pass that state to child via props */}
 {/* () => is an arrow function */}
 {/* onSomething for props, handleSomething for handling events */}
+{/* new top level game component and a history state */}
+{/* use keys to maintain identity of list items, allows to maintain state */}
